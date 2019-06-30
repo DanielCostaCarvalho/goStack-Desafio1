@@ -6,6 +6,13 @@ server.use(express.json());
 
 const projects = [];
 
+let reqNumber = 0;
+
+server.use((req, res, next) => {
+  console.log(++reqNumber);
+  next();
+});
+
 server.post("/projects", (req, res) => {
   const { id, title } = req.body;
   projects.push({ id: id, title: title, tasks: [] });
