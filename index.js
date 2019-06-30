@@ -8,6 +8,21 @@ const projects = [];
 
 let reqNumber = 0;
 
+function findProjectPositionById(id) {
+  positionInProjectsArray = projects.findIndex(project => project.id == id);
+  return positionInProjectsArray;
+}
+
+function checkProjectId(req, res, next) {
+  const projectId = req.params.id;
+  req.projectId = findProjectPositionById(projectId);
+  if (req.projectId == -1) {
+    return res.status(400).json({ error: "This id does not exists" });
+  }
+
+  return next();
+}
+
 server.use((req, res, next) => {
   console.log(++reqNumber);
   next();
@@ -23,36 +38,30 @@ server.get("/projects", (req, res) => {
   return res.json(projects);
 });
 
-server.put("/projects/:id", (req, res) => {
+server.put("/projects/:id", checkProjectId, (req, res) => {
   const { title } = req.body;
-  const { id } = req.params;
+  const projectId = req.projectId;
 
-  positionInProjectsArray = projects.findIndex(project => project.id == id);
+  projects[projectId].title = title;
 
-  projects[positionInProjectsArray].title = title;
-
-  return res.json(projects[positionInProjectsArray]);
+  return res.json(projects[projectId]);
 });
 
-server.delete("/projects/:id", (req, res) => {
-  const { id } = req.params;
+server.delete("/projects/:id", checkProjectId, (req, res) => {
+  const { projectId } = req.projectId;
 
-  positionInProjectsArray = projects.findIndex(project => project.id == id);
-
-  projects.splice(positionInProjectsArray, 1);
+  projects.splice(projectId, 1);
 
   return res.json(projects);
 });
 
-server.post("/projects/:id/tasks", (req, res) => {
-  const { id } = req.params;
+server.post("/projects/:id/tasks", checkProjectId, (req, res) => {
+  const projectId = req.projectId;
   const { title } = req.body;
 
-  positionInProjectsArray = projects.findIndex(project => project.id == id);
+  projects[projectId].tasks.push(title);
 
-  projects[positionInProjectsArray].tasks.push(title);
-
-  return res.json(projects[positionInProjectsArray]);
+  return res.json(projects[projectId]);
 });
 
 server.listen(3000);
